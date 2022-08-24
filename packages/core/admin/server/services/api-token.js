@@ -111,6 +111,27 @@ const exists = async (whereParams = {}) => {
 };
 
 /**
+ * Assert that all permissions to create are found in the contentAPI actions registry
+ *
+ * @param {string} accessKey
+ *
+ * @returns {string}
+ */
+const assertPermissionsAreRegistered = (permissions) => {
+  if (!permissions || isEmpty(permissions)) {
+    return;
+  }
+
+  // ensure all actions to be created exist in registry
+  const actionMap = strapi.contentAPI.permissions.getActionsMap();
+  permissions.forEach((permission) => {
+    if (!actionMap[permission]) {
+      throw new ValidationError(`Permission not found in action registry: ${permission}`);
+    }
+  });
+};
+
+/**
  * Return a secure sha512 hash of an accessKey
  *
  * @param {string} accessKey
@@ -154,6 +175,8 @@ const create = async (attributes) => {
 
   // If this is a custom type token, create and the related permissions
   if (attributes.type === constants.API_TOKEN_TYPE.CUSTOM) {
+    assertPermissionsAreRegistered(attributes.permissions);
+
     // TODO: createMany doesn't seem to create relation properly, implement a better way rather than a ton of queries
     // const permissionsCount = await strapi.query('admin::token-permission').createMany({
     //   populate: POPULATE_FIELDS,
@@ -322,6 +345,8 @@ const update = async (id, attributes) => {
 
   // custom tokens need to have their permissions updated as well
   if (updatedToken.type === constants.API_TOKEN_TYPE.CUSTOM && attributes.permissions) {
+    assertPermissionsAreRegistered(attributes.permissions);
+
     const currentPermissionsResult =
       (await strapi.entityService.load('admin::api-token', updatedToken, 'permissions')) || [];
 
