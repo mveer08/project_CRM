@@ -82,12 +82,7 @@ const createDefaultImplementation = ({ strapi, db, eventHub, entityValidator }) 
 
     const query = transformParamsToQuery(uid, wrappedParams);
 
-    const { results, pagination } = await db.query(uid).findPage(query);
-
-    return {
-      results,
-      pagination,
-    };
+    return db.query(uid).findPage(query);
   },
 
   async findWithRelationCounts(uid, opts) {
@@ -95,9 +90,7 @@ const createDefaultImplementation = ({ strapi, db, eventHub, entityValidator }) 
 
     const query = transformParamsToQuery(uid, wrappedParams);
 
-    const results = await db.query(uid).findMany(query);
-
-    return results;
+    return db.query(uid).findMany(query);
   },
 
   async findOne(uid, entityId, opts) {
